@@ -1,5 +1,6 @@
 package ru.sweater.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.sweater.domain.Role;
 import ru.sweater.domain.User;
 import ru.sweater.repos.UserRepo;
@@ -20,9 +21,15 @@ public class UserSevice implements UserDetailsService {
 
     @Autowired
     private MailSender mailSender;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user=userRepo.findByUsername(username);
+        if (user==null){
+            throw new UsernameNotFoundException ("User not found");
+        }
         return userRepo.findByUsername(username);
     }
 
@@ -36,6 +43,7 @@ public class UserSevice implements UserDetailsService {
         user.setActive(true);
         user.setRoles(Collections.singleton(Role.USER));
         user.setActivationCode(UUID.randomUUID().toString());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         userRepo.save(user);
 
